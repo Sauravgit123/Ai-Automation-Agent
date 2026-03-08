@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Automation Agent</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #a855f7, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .box {
+            width: 100%;
+            max-width: 700px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            padding: 14px;
+            resize: none;
+            outline: none;
+        }
+
+        textarea:focus { border-color: #a855f7; }
+
+        button {
+            margin-top: 14px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #a855f7, #3b82f6);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            background: #2a1a4a;
+            color: #a855f7;
+            border: 1px solid #a855f7;
+        }
+
+        .output-box {
+            width: 100%;
+            max-width: 700px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 24px;
+            display: none;
+        }
+
+        .output-text {
+            color: #ccc;
+            line-height: 1.7;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            color: #a855f7;
+            font-size: 0.95rem;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .history-box {
+            width: 100%;
+            max-width: 700px;
+            margin-top: 10px;
+        }
+
+        .history-item {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .history-item .task-type {
+            font-size: 0.75rem;
+            color: #a855f7;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .history-item .task-input {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .history-item .task-output {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        h3 { margin-bottom: 14px; color: #888; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+
+    <h1>⚡ AI Automation Agent</h1>
+    <p class="subtitle">Paste anything. AI figures out what to do automatically.</p>
+
+    <div class="box">
+        <textarea id="userInput" placeholder="Paste anything here — an email, article, to-do list, question, voice note text..."></textarea>
+        <div class="loading" id="loading">⏳ Detecting task and processing...</div>
+        <button id="runBtn" onclick="runAutomation()">⚡ Run Automation</button>
+    </div>
+
+    <div class="output-box" id="outputBox">
+        <div class="tag" id="taskTag">📋 Task Detected</div>
+        <div class="output-text" id="outputText"></div>
+    </div>
+
+    <div class="history-box">
+        <h3>📂 Task History</h3>
+        <div id="historyList"></div>
+    </div>
+
+<script>
+    
+
+    // ✅ YOUR MODULE — Task Detection Logic (you wrote this)
+    function detectTask(text) {
+        text = text.toLowerCase();
+
+        if (text.includes("dear") || text.includes("subject:") || text.includes("regards") || text.includes("hi,") || text.includes("hello,")) {
+            return { type: "📧 Email", action: "summarize this email and draft a short reply" };
+        }
+        else if (text.includes("http") || text.includes("www.") || text.includes(".com")) {
+            return { type: "🔗 Link/URL", action: "summarize what this link or article is about based on the text provided" };
+        }
+        else if (text.includes("invoice") || text.includes("payment") || text.includes("bill") || text.includes("amount due")) {
+    return { type: "💰 Invoice/Payment", action: "extract all payment details like amount, due date, and who to pay" };
+}
+else if (text.includes("meeting") || text.includes("agenda") || text.includes("attendees") || text.includes("minutes")) {
+    return { type: "📅 Meeting Notes", action: "summarize the meeting and list all action items with who is responsible" };
+}
+else if (text.includes("error") || text.includes("bug") || text.includes("exception") || text.includes("not working")) {
+    return { type: "🐛 Bug/Error", action: "analyze this error and suggest how to fix it step by step" };
+}
+        else if (text.includes("todo") || text.includes("to-do") || text.includes("tasks:") || text.includes("1.") || text.includes("- ")) {
+            return { type: "✅ To-Do List", action: "organize these tasks by priority (High / Medium / Low) and suggest what to do first" };
+        }
+        else if (text.split(" ").length > 80) {
+            return { type: "📄 Long Text / Article", action: "summarize this in 5 bullet points" };
+        }
+        else if (text.includes("?")) {
+            return { type: "❓ Question", action: "answer this question clearly and concisely" };
+        }
+        
+        else {
+            return { type: "📝 General Text", action: "summarize and extract the key points from this text" };
+        }
+    }
+
+    // ✅ YOUR MODULE — Automation Rules Engine
+    // ✅ YOUR MODULE — Prompt Engineering (you wrote this)
+function buildPrompt(taskInfo, userText) {
+    let instructions = "";
+
+    if (taskInfo.type.includes("Email")) {
+        instructions = `
+1. Give a 3 line summary of this email
+2. Identify the action required from the reader
+3. Draft a professional reply in 5 lines`;
+    }
+    else if (taskInfo.type.includes("Bug")) {
+        instructions = `
+1. Identify what the error means in simple words
+2. Give the most likely cause of this error
+3. Give step by step fix with code examples if possible`;
+    }
+    else if (taskInfo.type.includes("Invoice")) {
+        instructions = `
+1. Extract: Amount to pay
+2. Extract: Due date
+3. Extract: Who to pay / company name
+4. Extract: Payment method if mentioned
+5. Give a one line summary`;
+    }
+    else if (taskInfo.type.includes("Meeting")) {
+        instructions = `
+1. Summarize the meeting in 3 lines
+2. List all action items clearly
+3. Mention who is responsible for each action item
+4. Mention any deadlines discussed`;
+    }
+    else if (taskInfo.type.includes("To-Do")) {
+        instructions = `
+1. Organize all tasks by priority - High, Medium, Low
+2. Suggest which task to do first and why
+3. Estimate time needed for each task`;
+    }
+    else if (taskInfo.type.includes("Article")) {
+        instructions = `
+1. Give 5 bullet point summary
+2. What is the main argument or finding?
+3. What should the reader take away from this?`;
+    }
+    else if (taskInfo.type.includes("Question")) {
+        instructions = `
+1. Answer the question directly in simple words
+2. Give an example if helpful
+3. Keep it under 5 lines`;
+    }
+    else {
+        instructions = `
+1. Summarize the key points
+2. Extract any important information
+3. Suggest what action the user should take`;
+    }
+
+    return `You are an AI automation assistant helping users with their daily tasks.
+
+Task type detected: ${taskInfo.type}
+
+Your job:
+${instructions}
+
+User input:
+"${userText}"
+
+Be specific, clear and well formatted in your response.`;
+}
+
+    // ✅ YOUR MODULE — Task History (saved in browser)
+    function saveToHistory(taskType, input, output) {
+        const history = JSON.parse(localStorage.getItem("taskHistory") || "[]");
+        history.unshift({ taskType, input: input.slice(0, 100) + "...", output, time: new Date().toLocaleString() });
+        if (history.length > 10) history.pop(); // keep last 10 only
+        localStorage.setItem("taskHistory", JSON.stringify(history));
+        renderHistory();
+    }
+
+   // ✅ YOUR MODULE — Task History (you wrote this)
+function renderHistory() {
+    const history = JSON.parse(localStorage.getItem("taskHistory") || "[]");
+    const list = document.getElementById("historyList");
+    
+    if (history.length === 0) {
+        list.innerHTML = '<p style="color:#555;font-size:0.85rem;">No tasks yet. Run your first automation above!</p>';
+        return;
+    }
+
+    list.innerHTML = `
+        <button onclick="clearHistory()" style="
+            margin-bottom: 16px;
+            padding: 8px 20px;
+            background: transparent;
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+            color: #ff4444;
+            cursor: pointer;
+            font-size: 0.85rem;
+            width: auto;
+        ">🗑️ Clear History</button>
+
+        ${history.map((item, index) => `
+            <div class="history-item" style="border-left: 3px solid #a855f7;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="task-type">${item.taskType}</div>
+                    <div style="font-size:0.75rem; color:#555;">${item.time}</div>
+                </div>
+                <div class="task-input" style="margin: 6px 0; padding: 8px; background:#111; border-radius:6px;">
+                    📝 ${item.input}
+                </div>
+                <div class="task-output" style="margin-top:8px; color:#aaa;">
+                    🤖 ${item.output.slice(0, 150)}...
+                </div>
+            </div>
+        `).join("")}
+    `;
+}
+
+// ✅ YOUR MODULE — Clear History (you wrote this)
+function clearHistory() {
+    if (confirm("Are you sure you want to clear all history?")) {
+        localStorage.removeItem("taskHistory");
+        renderHistory();
+    }
+}
+
+    // Groq API call
+   async function callGroq(prompt) {
+    const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+    });
+    const data = await response.json();
+    return data.result;
+}
+
+    // Main function
+    async function runAutomation() {
+        const input = document.getElementById("userInput").value.trim();
+        if (!input) { alert("Please paste something first!"); return; }
+
+        const btn = document.getElementById("runBtn");
+        const loading = document.getElementById("loading");
+        btn.disabled = true;
+        loading.style.display = "block";
+
+        const taskInfo = detectTask(input);         // YOUR logic runs here
+        const prompt = buildPrompt(taskInfo, input); // YOUR prompt runs here
+
+        const output = await callGroq(prompt);
+
+        document.getElementById("taskTag").innerText = taskInfo.type;
+        document.getElementById("outputText").innerText = output;
+        document.getElementById("outputBox").style.display = "block";
+
+        saveToHistory(taskInfo.type, input, output); // YOUR history saves here
+
+        btn.disabled = false;
+        loading.style.display = "none";
+    }
+
+    // Load history on page open
+    renderHistory();
+</script>
+
+</body>
+</html>
