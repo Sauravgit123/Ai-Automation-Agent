@@ -549,7 +549,7 @@
         if (text.includes("dear") || text.includes("subject:") || text.includes("regards") || text.includes("hi,") || text.includes("hello,")) {
             return { type: "📧 Email", action: "summarize this email and draft a short reply" };
         }
-        else if (text.includes("error") || text.includes("bug") || text.includes("exception") || text.includes("not working")) {
+        else if ((text.includes("error") || text.includes("exception") || text.includes("not working")) || (text.includes("bug") && !text.includes("tasks:") && !text.includes("- "))) {
             return { type: "🐛 Bug/Error", action: "analyze this error and suggest how to fix it step by step" };
         }
         else if (text.includes("invoice") || text.includes("payment") || text.includes("bill") || text.includes("amount due")) {
