@@ -737,6 +737,14 @@ Be specific, clear and well formatted in your response.`;
     }
 
     renderHistory();
+
+    // Run automation on Enter (Shift+Enter for newline)
+    document.getElementById("userInput").addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            runAutomation();
+        }
+    });
 </script>
 
 </body>
