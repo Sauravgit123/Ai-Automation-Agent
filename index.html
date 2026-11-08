@@ -542,7 +542,7 @@
 </div>
 
 <script>
-    // ✅ YOUR MODULE — Task Detection Logic (you wrote this)
+    
     function detectTask(text) {
         text = text.toLowerCase();
 
@@ -575,7 +575,7 @@
         }
     }
 
-    // ✅ YOUR MODULE — Prompt Engineering (you wrote this)
+    // 
     function buildPrompt(taskInfo, userText) {
         let instructions = "";
 
@@ -644,10 +644,11 @@ User input:
 Be specific, clear and well formatted in your response.`;
     }
 
-    // ✅ YOUR MODULE — Task History (you wrote this)
+    // 
     function saveToHistory(taskType, input, output) {
+        if (!output) return;
         const history = JSON.parse(localStorage.getItem("taskHistory") || "[]");
-        history.unshift({ taskType, input: input.slice(0, 100) + "...", output, time: new Date().toLocaleString() });
+        history.unshift({ taskType, input: (input || "").slice(0, 100) + "...", output, time: new Date().toLocaleString() });
         if (history.length > 10) history.pop();
         localStorage.setItem("taskHistory", JSON.stringify(history));
         renderHistory();
@@ -673,12 +674,12 @@ Be specific, clear and well formatted in your response.`;
                     <div class="history-time">${item.time}</div>
                 </div>
                 <div class="history-input">📝 ${item.input}</div>
-                <div class="history-output">🤖 ${item.output.slice(0, 180)}...</div>
+                <div class="history-output">🤖 ${(item.output || "").slice(0, 180)}...</div>
             </div>
         `).join("");
     }
 
-    // ✅ YOUR MODULE — Clear History
+    // 
     function clearHistory() {
         if (confirm("Clear all task history?")) {
             localStorage.removeItem("taskHistory");
@@ -694,6 +695,9 @@ Be specific, clear and well formatted in your response.`;
             body: JSON.stringify({ prompt })
         });
         const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || `Server error (${response.status})`);
+        }
         return data.result;
     }
 
@@ -712,19 +716,24 @@ Be specific, clear and well formatted in your response.`;
         loadingBar.style.display = "block";
         outputCard.style.display = "none";
 
-        const taskInfo = detectTask(input);
-        const prompt = buildPrompt(taskInfo, input);
-        const output = await callGroq(prompt);
+        try {
+            const taskInfo = detectTask(input);
+            const prompt = buildPrompt(taskInfo, input);
+            const output = await callGroq(prompt);
 
-        document.getElementById("taskTag").innerText = taskInfo.type;
-        document.getElementById("outputText").innerText = output;
-        outputCard.style.display = "block";
+            document.getElementById("taskTag").innerText = taskInfo.type;
+            document.getElementById("outputText").innerText = output;
+            outputCard.style.display = "block";
 
-        saveToHistory(taskInfo.type, input, output);
-
-        btn.disabled = false;
-        loadingText.style.display = "none";
-        loadingBar.style.display = "none";
+            saveToHistory(taskInfo.type, input, output);
+        } catch (err) {
+            alert("Error: " + err.message);
+            console.error("Automation error:", err);
+        } finally {
+            btn.disabled = false;
+            loadingText.style.display = "none";
+            loadingBar.style.display = "none";
+        }
     }
 
     renderHistory();

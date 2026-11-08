@@ -26,7 +26,7 @@ export default async function handler(req, res) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+                "Authorization": `Bearer ${process.env.GROQ_API_KEY.trim()}`
             },
             body: JSON.stringify({
                 model: "llama-3.3-70b-versatile",
@@ -37,8 +37,9 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
-        if (!data.choices || !data.choices[0]) {
-            return res.status(500).json({ error: "Invalid response from Groq" });
+        if (!response.ok || !data.choices || !data.choices[0]) {
+            const errorMsg = data.error?.message || (typeof data.error === "string" ? data.error : "Invalid response from Groq");
+            return res.status(response.status || 500).json({ error: errorMsg });
         }
 
         res.status(200).json({ result: data.choices[0].message.content });
